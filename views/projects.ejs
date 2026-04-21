@@ -1,0 +1,52 @@
+<%
+const body = `
+<div class="page-head animate-fade">
+  <div>
+    <div class="page-title">/ <span data-i18n="project_list">${t('project_list')}</span></div>
+    <div class="page-desc" data-i18n="project_desc">${t('project_desc')}</div>
+  </div>
+  <button class="ui-button" type="button" onclick="document.getElementById('create-panel').classList.toggle('is-hidden')">+ <span data-i18n="new_project">${t('new_project')}</span></button>
+</div>
+
+<section id="create-panel" class="panel ${projects.length ? "is-hidden" : ""} animate-fade" style="animation-delay:.1s">
+  <div class="panel-title" data-i18n="create_project">${t('create_project')}</div>
+  <form method="post" action="/projects" class="stack-lg">
+    <div class="grid-2 grid-2--wide">
+      <label class="field">
+        <span class="field-label" data-i18n="project_name">${t('project_name')}</span>
+        <span class="input-wrap"><input class="ui-input" name="name" placeholder="e.g. orders" required /></span>
+      </label>
+      <label class="field">
+        <span class="field-label" data-i18n="api_prefix">${t('api_prefix')}</span>
+        <span class="input-wrap"><input class="ui-input" name="apiPrefix" placeholder="e.g. api/v1" /></span>
+      </label>
+    </div>
+    <div class="hint" data-i18n="api_prefix_hint">${t('api_prefix_hint')}</div>
+    <div class="actions-row">
+      <button class="ui-button" type="submit" data-i18n="create">${t('create')}</button>
+    </div>
+  </form>
+</section>
+
+<section class="card-grid">
+  ${projects.map((project, i) => `
+    <a class="card-link" href="/projects/${project.id}">
+      <article class="card card--hover animate-fade" style="animation-delay:${(i+1)*.05}s">
+        <div class="card-head">
+          <div>
+            <div class="card-title">${project.name}</div>
+            <div class="card-sub">ID: ${project.id}</div>
+          </div>
+          <span class="tag">${(project.resources || []).length}&nbsp;<span data-i18n="res">${t('res')}</span></span>
+        </div>
+        <div class="meta-list">
+          <div><span data-i18n="prefix">${t('prefix')}</span><code>${project.apiPrefix || "—"}</code></div>
+          <div><span data-i18n="updated">${t('updated')}</span>${new Date(project.updatedAt).toLocaleString(currentLocale === 'zh' ? 'zh-CN' : 'en-US')}</div>
+        </div>
+      </article>
+    </a>
+  `).join("")}
+</section>
+`;
+%>
+<%- include('layout', { title: t('project_list'), body }) %>

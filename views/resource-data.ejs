@@ -1,0 +1,152 @@
+<%
+const body = `
+<nav class="breadcrumb animate-fade">
+  <a href="/projects">/</a><span>/</span><a href="/projects/${project.id}">${project.name}</a><span>/</span><span>${resource.label || resource.name}</span><span>/</span><span data-i18n="data">${t('data')}</span>
+</nav>
+
+<section class="grid-2 grid-2--wide animate-fade" style="animation-delay:.05s">
+  <section class="panel stack-lg">
+    <div class="panel-title" data-i18n="data_editor">${t('data_editor')}</div>
+    <div class="hint" data-i18n="data_hint">${t('data_hint')}</div>
+    <form id="data-form" class="stack-lg">
+      <div class="editor-wrap" id="editor-wrap">
+        <button type="button" class="btn-expand" onclick="toggleFullscreen()" title="Expand">⛶</button>
+        <textarea id="json-editor" name="jsonText">${jsonText.replace(/</g, '&lt;')}</textarea>
+      </div>
+      <div class="actions-row">
+        <a class="ui-button ui-button--ghost" href="/projects/${project.id}"><span data-i18n="back">${t('back')}</span></a>
+        <button class="ui-button" type="button" onclick="formatJson()" data-i18n="format">${t('format')}</button>
+        <button class="ui-button" type="button" onclick="saveData()"><span data-i18n="save_button">${t('save_button')}</span></button>
+        <a class="ui-button ui-button--ghost" href="/projects/${project.id}/resources/${resource.name}/docs"><span data-i18n="docs">${t('docs')}</span></a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="panel stack-lg">
+    <div class="panel-title" data-i18n="sample">${t('sample')}</div>
+    <div class="hint" data-i18n="sample_hint">${t('sample_hint')}</div>
+    <pre class="code-block" id="sample-code">${sample.replace(/</g, '&lt;')}</pre>
+
+    <div class="panel-subtitle" data-i18n="endpoint">${t('endpoint')}</div>
+    <div class="endpoint-box">
+      <div class="endpoint-value">${apiBase}/${resource.name}</div>
+    </div>
+  </aside>
+</section>
+
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="ui-button" id="modal-ok-btn" data-i18n="ok">${t('ok')}</button>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script>
+  var editor = CodeMirror.fromTextArea(document.getElementById('json-editor'), {
+    mode: 'application/json',
+    theme: 'material-darker',
+    lineNumbers: true,
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    indentUnit: 2,
+    tabSize: 2,
+    lineWrapping: true
+  });
+
+  function toggleFullscreen() {
+    var wrap = document.getElementById('editor-wrap');
+    wrap.classList.toggle('editor-wrap--fullscreen');
+    editor.refresh();
+  }
+
+  function formatJson() {
+    try {
+      var current = editor.getValue();
+      if (current.trim()) {
+        var parsed = JSON.parse(current);
+        editor.setValue(JSON.stringify(parsed, null, 2));
+      }
+    } catch(e) {
+      showErrorModal('Invalid JSON format');
+    }
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = event.target.closest('.btn-copy');
+      var original = btn.innerHTML;
+      btn.innerHTML = '✓';
+      setTimeout(function() { btn.innerHTML = original; }, 1500);
+    });
+  }
+
+  function saveData() {
+    var jsonText = editor.getValue();
+
+    fetch('/projects/${project.id}/resources/${resource.name}/data/save', {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ jsonText: jsonText })
+    })
+    .then(function(response) {
+      return response.json().then(function(data) {
+        if (response.ok && data.success) {
+          showSuccessModal();
+        } else {
+          showErrorModal(data.error || 'Unknown error');
+        }
+      }).catch(function() {
+        return response.text().then(function(text) {
+          showErrorModal(text);
+        });
+      });
+    })
+    .catch(function(error) {
+      showErrorModal('Save failed: ' + error.message);
+    });
+  }
+
+  function showErrorModal(message) {
+    document.querySelector('.modal-title').textContent = 'Error';
+    document.querySelector('.modal-body').textContent = message;
+    document.getElementById('modal-overlay').style.display = 'flex';
+  }
+
+  var isSuccessModal = false;
+  function showSuccessModal() {
+    isSuccessModal = true;
+    var locale = localStorage.getItem('locale') || 'zh';
+    document.querySelector('.modal-title').textContent = locale === 'zh' ? '成功' : 'Success';
+    document.querySelector('.modal-body').textContent = locale === 'zh' ? '数据保存成功' : 'Data saved successfully';
+    document.getElementById('modal-ok-btn').textContent = locale === 'zh' ? '返回' : 'BACK';
+    document.getElementById('modal-overlay').style.display = 'flex';
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modal-overlay').style.display = 'none';
+  }
+
+  document.getElementById('modal-ok-btn').onclick = function() {
+    if (isSuccessModal) {
+      window.location.href = '/projects/${project.id}';
+    } else {
+      closeModal();
+    }
+  };
+</script>
+`;
+%>
+<%- include('layout', { title: t('data_editor'), body }) %>

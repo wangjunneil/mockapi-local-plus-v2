@@ -1,0 +1,30 @@
+<%
+const body = `
+<style>
+  .page { max-width: 600px !important; width: 100% !important; }
+  .login-panel { width: 100%; max-width: none !important; }
+  .login-panel .ui-input { height: 52px; padding: 0 20px; font-size: 16px; }
+  .login-panel .field-label { font-size: 13px; margin-bottom: 10px; }
+  .login-panel .actions-row .ui-button { height: 44px; padding: 0 28px; font-size: 13px; }
+</style>
+<div class="page-center">
+  <section class="panel animate-fade login-panel">
+    <div class="panel-title" data-i18n="login_title">${t('login_title')}</div>
+    <form method="post" action="/login" class="stack-lg">
+      <label class="field">
+        <span class="field-label" data-i18n="username">${t('username')}</span>
+        <span class="input-wrap"><input class="ui-input" name="username" placeholder="e.g. wangjun" required autofocus /></span>
+      </label>
+      <label class="field">
+        <span class="field-label" data-i18n="password">${t('password')}</span>
+        <span class="input-wrap"><input class="ui-input" type="password" name="password" placeholder="e.g. wj123321" required /></span>
+      </label>
+      <div class="actions-row" style="margin-top:28px">
+        <button class="ui-button" type="submit" data-i18n="login">${t('login')}</button>
+      </div>
+    </form>
+  </section>
+</div>
+`;
+%>
+<%- include('layout', { title: t('login_title'), body }) %>

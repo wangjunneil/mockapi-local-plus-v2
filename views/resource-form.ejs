@@ -1,0 +1,161 @@
+<%
+const isEdit = mode === 'edit';
+const rows = [...resource.fields];
+while (rows.length < 3) rows.push({ name: '', type: 'string' });
+const typeOptions = ['id','string','number','boolean','object','array'];
+const body = `
+<nav class="breadcrumb animate-fade">
+  <a href="/projects">/</a><span>/</span><a href="/projects/${project.id}">${project.name}</a><span>/</span><span data-i18n="${isEdit ? 'edit_resource' : 'new_resource'}">${t(isEdit ? 'edit_resource' : 'new_resource')}</span>
+</nav>
+
+<section class="panel animate-fade" style="animation-delay:.05s">
+  <div class="panel-title" data-i18n="${isEdit ? 'edit_resource' : 'new_resource'}">${t(isEdit ? 'edit_resource' : 'new_resource')}</div>
+  <form method="post" action="${isEdit ? `/projects/${project.id}/resources/${resource.name}/save` : `/projects/${project.id}/resources`}" class="stack-lg" id="resource-form">
+    <div class="grid-2">
+      <label class="field">
+        <span class="field-label" data-i18n="resource_name">${t('resource_name')}</span>
+        <span class="input-wrap"><input class="ui-input" name="name" value="${(resource.name || '').replace(/"/g,'&quot;')}" placeholder="e.g. users" required /></span>
+      </label>
+      <label class="field">
+        <span class="field-label" data-i18n="label">${t('label')}</span>
+        <span class="input-wrap"><input class="ui-input" name="label" value="${(resource.label || '').replace(/"/g,'&quot;')}" placeholder="e.g. Users" /></span>
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field-label" data-i18n="parent_resource">${t('parent_resource')}</span>
+      <span class="select-wrap">
+        <select class="ui-select" name="parentResource">
+          <option value="">${t('none')}</option>
+          ${resources.filter(r => r.name !== resource.name).map(r => `<option value="${r.name}" ${resource.parentResource === r.name ? 'selected' : ''}>${r.label || r.name}</option>`).join('')}
+        </select>
+      </span>
+      <div class="hint" data-i18n="parent_hint">${t('parent_hint')}</div>
+    </label>
+
+    <div class="panel-subtitle" data-i18n="field_config">${t('field_config')}</div>
+    <div class="schema-table" id="field-container">
+      <div class="schema-row schema-row--head">
+        <div data-i18n="field_name">${t('field_name')}</div><div data-i18n="field_type">${t('field_type')}</div><div style="width:30px"></div>
+      </div>
+      ${rows.map((field, idx) => `
+        <div class="schema-row field-row ${idx === 0 ? 'field-row--id' : ''}">
+          <div class="input-wrap"><input class="ui-input field-name" name="fieldName" value="${String(field.name || '').replace(/"/g,'&quot;')}" placeholder="field" data-idx="${idx}" ${idx === 0 ? 'readonly' : ''} /></div>
+          <div class="select-wrap">
+            <select class="ui-select field-type" name="fieldType" data-idx="${idx}" ${idx === 0 ? 'disabled' : ''}>
+              ${typeOptions.filter(tp => idx > 0 || tp !== 'id').map(tp => `<option value="${tp}" ${field.type === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+            </select>
+          </div>
+          <button type="button" class="btn-remove-field" onclick="confirmRemoveField(this)" title="Remove" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>×</button>
+        </div>
+      `).join('')}
+    </div>
+    <button type="button" class="ui-button ui-button--ghost" onclick="addField()" style="margin-top:8px">+ <span data-i18n="add_field">${t('add_field')}</span></button>
+    <div class="hint" data-i18n="auto_id">${t('auto_id')}</div>
+
+    <div class="actions-row">
+      <button class="ui-button" type="submit" data-i18n="${isEdit ? 'save' : 'create'}">${t(isEdit ? 'save' : 'create')}</button>
+      <a class="ui-button ui-button--ghost" href="/projects/${project.id}" data-i18n="back">${t('back')}</a>
+    </div>
+  </form>
+</section>
+
+<div id="field-modal-overlay" class="modal-overlay" onclick="closeFieldModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="field-modal-title"></div>
+    <div class="modal-body" id="field-modal-body"></div>
+    <div class="modal-actions">
+      <button class="ui-button ui-button--ghost" onclick="closeFieldModal()"><span data-i18n="back">${t('back')}</span></button>
+      <button class="ui-button ui-button--danger" id="field-modal-confirm" onclick="confirmFieldModal()">${t('delete')}</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('resource-form').addEventListener('submit', function() {
+  document.querySelectorAll('.field-type[disabled]').forEach(function(el) {
+    el.disabled = false;
+  });
+});
+
+function addField() {
+  const container = document.getElementById('field-container');
+  const idx = container.querySelectorAll('.field-row').length;
+  const row = document.createElement('div');
+  row.className = 'schema-row field-row';
+  row.innerHTML = 
+    '<div class="input-wrap"><input class="ui-input field-name" name="fieldName" placeholder="field" data-idx="' + idx + '" /></div>' +
+    '<div class="select-wrap">' +
+      '<select class="ui-select field-type" name="fieldType" data-idx="' + idx + '">' +
+        '<option value="string">string</option>' +
+        '<option value="number">number</option>' +
+        '<option value="boolean">boolean</option>' +
+        '<option value="object">object</option>' +
+        '<option value="array">array</option>' +
+      '</select>' +
+    '</div>' +
+    '<button type="button" class="btn-remove-field" onclick="confirmRemoveField(this)" title="Remove">×</button>';
+  container.appendChild(row);
+  updateFieldIndices();
+}
+
+function confirmRemoveField(btn) {
+  var row = btn.closest('.field-row');
+  if (row.classList.contains('field-row--id')) return;
+  var fieldName = row.querySelector('.field-name').value || 'this field';
+  var msg = _t('delete_field_confirm', { field: fieldName });
+  fieldToRemove = btn;
+  document.getElementById('field-modal-title').textContent = _t('delete_field_title');
+  document.getElementById('field-modal-body').textContent = msg;
+  document.getElementById('field-modal-overlay').style.display = 'flex';
+}
+
+function removeField(btn) {
+  var row = btn.closest('.field-row');
+  var container = document.getElementById('field-container');
+  if (container.querySelectorAll('.field-row').length > 1 && !row.classList.contains('field-row--id')) {
+    row.remove();
+    updateFieldIndices();
+  }
+}
+
+function updateFieldIndices() {
+  var rows = document.querySelectorAll('.field-row');
+  rows.forEach(function(row, i) {
+    row.classList.toggle('field-row--id', i === 0);
+    row.querySelector('.field-name').setAttribute('data-idx', i);
+    row.querySelector('.field-type').setAttribute('data-idx', i);
+  });
+}
+
+var fieldToRemove = null;
+
+function closeFieldModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('field-modal-overlay').style.display = 'none';
+  fieldToRemove = null;
+}
+
+function confirmFieldModal() {
+  if (fieldToRemove) {
+    removeField(fieldToRemove);
+  }
+  closeFieldModal();
+}
+
+function _t(key, params) {
+  var text = key;
+  if (typeof i18n !== 'undefined' && i18n[currentLocale] && i18n[currentLocale][key]) {
+    text = i18n[currentLocale][key];
+  }
+  if (params) {
+    Object.keys(params).forEach(function(k) {
+      text = text.replace('{' + k + '}', params[k]);
+    });
+  }
+  return text;
+}
+</script>
+`;
+%>
+<%- include('layout', { title: t(isEdit ? 'edit_resource' : 'new_resource'), body }) %>

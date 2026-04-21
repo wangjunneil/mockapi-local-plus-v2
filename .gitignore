@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Data
+data/projects/*
+!data/projects/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp
+tmp/
+temp/
+*.tmp

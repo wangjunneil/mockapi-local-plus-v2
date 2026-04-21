@@ -1,0 +1,74 @@
+<%
+const base = `${apiBase}/${resource.name}`;
+const parentNote = resource.parentResource ? `${apiBase}/${resource.parentResource}/1/${resource.name}` : t('not_set');
+const body = `
+<nav class="breadcrumb animate-fade">
+  <a href="/projects">/</a><span>/</span><a href="/projects/${project.id}">${project.name}</a><span>/</span><span>${resource.label || resource.name}</span><span>/</span><span data-i18n="api_docs">${t('api_docs')}</span>
+</nav>
+
+<section class="panel animate-fade" style="animation-delay:.05s">
+  <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span data-i18n="restful_api">${t('restful_api')}</span>
+    <a class="ui-button ui-button--ghost" href="/projects/${project.id}"><span data-i18n="back">${t('back')}</span></a>
+  </div>
+  <table class="ui-table">
+    <thead>
+      <tr><th style="width:70px" data-i18n="method">${t('method')}</th><th data-i18n="endpoint_col">${t('endpoint_col')}</th><th data-i18n="desc">${t('desc')}</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="kbd">GET</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}')" title="Copy">📋</button></div></td><td data-i18n="list">${t('list')}</td></tr>
+      <tr><td><span class="kbd">GET</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}/:id</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}/:id')" title="Copy">📋</button></div></td><td data-i18n="detail">${t('detail')}</td></tr>
+      <tr><td><span class="kbd">POST</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}')" title="Copy">📋</button></div></td><td data-i18n="create_new">${t('create_new')}</td></tr>
+      <tr><td><span class="kbd">PUT</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}/:id</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}/:id')" title="Copy">📋</button></div></td><td data-i18n="update_full">${t('update_full')}</td></tr>
+      <tr><td><span class="kbd">PATCH</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}/:id</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}/:id')" title="Copy">📋</button></div></td><td data-i18n="patch">${t('patch')}</td></tr>
+      <tr><td><span class="kbd">DEL</span></td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><code style="word-break:break-all;flex:1">${base}/:id</code><button type="button" class="btn-copy" onclick="copyText('${base.replace(/'/g, "\\'")}/:id')" title="Copy">📋</button></div></td><td data-i18n="delete_record">${t('delete_record')}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="grid-2 grid-2--wide animate-fade" style="animation-delay:.1s">
+  <section class="panel stack-lg">
+    <div class="panel-title" data-i18n="api_examples">${t('api_examples')}</div>
+    <pre class="code-block">// <span data-i18n="list_example">${t('list_example')}</span>
+fetch('<code>${base}</code>')
+
+// <span data-i18n="create_example">${t('create_example')}</span>
+fetch('<code>${base}</code>', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify(${sample.replace(/</g, '&lt;')})
+})
+
+// <span data-i18n="patch_example">${t('patch_example')}</span>
+fetch('<code>${base}/1</code>', {
+  method: 'PATCH',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ ... })
+})</pre>
+  </section>
+
+  <aside class="panel stack-lg">
+    <div class="panel-title" data-i18n="query">${t('query')}</div>
+    <pre class="code-block"><code>?q=keyword</code> <span data-i18n="search">${t('search')}</span></pre>
+    <pre class="code-block"><code>?page=1&limit=10</code> <span data-i18n="page">${t('page')}</span></pre>
+    <pre class="code-block"><code>?sortBy=id&order=desc</code> <span data-i18n="sort">${t('sort')}</span></pre>
+    <pre class="code-block"><code>?field=value</code> <span data-i18n="filter">${t('filter')}</span></pre>
+
+    <div class="panel-subtitle" data-i18n="api_nested">${t('api_nested')}</div>
+    <pre class="code-block">${parentNote}</pre>
+  </aside>
+</section>
+
+<script>
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = event.target.closest('.btn-copy');
+    var original = btn.innerHTML;
+    btn.innerHTML = '✓';
+    setTimeout(function() { btn.innerHTML = original; }, 1500);
+  });
+}
+</script>
+`;
+%>
+<%- include('layout', { title: t('api_docs'), body }) %>
