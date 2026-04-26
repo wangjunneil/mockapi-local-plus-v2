@@ -1,0 +1,284 @@
+<%
+const isEdit = mode === 'edit';
+const currentType = kv.fields && kv.fields[0] ? kv.fields[0].type : 'string';
+const currentValue = kv.value && kv.value.value !== undefined ? kv.value.value : '';
+const typeOptions = ['string','boolean','object'];
+function renderValueInput(type, value) {
+  if (type === 'boolean') {
+    const selectedTrue = value === true || value === 'true' ? 'selected' : '';
+    const selectedFalse = value === false || value === 'false' ? 'selected' : '';
+    return '<span class="select-wrap"><select class="ui-select" name="value"><option value="true" ' + selectedTrue + '>TRUE</option><option value="false" ' + selectedFalse + '>FALSE</option></select></span>';
+  }
+  if (type === 'object' || type === 'string') {
+    var displayValue = type === 'object' ? (typeof value === 'object' ? JSON.stringify(value) : String(value || '')) : String(value || '');
+    displayValue = displayValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    var placeholder = type === 'object' ? '{key:value}' : 'value';
+    return '<div class="textarea-wrap"><textarea class="ui-input" name="value" placeholder="' + placeholder + '">' + displayValue + '</textarea><button type="button" class="btn-expand" onclick="toggleExpand(this)" title="Expand">⛶</button></div>';
+  }
+  return '<span class="input-wrap"><input class="ui-input" type="text" name="value" value="' + String(value || '').replace(/"/g,'&quot;') + '" placeholder="value" /></span>';
+}
+const body = `
+<nav class="breadcrumb animate-fade">
+  <a href="/projects">/</a><span>/</span><a href="/projects/${project.id}">${project.name}</a><span>/</span><span data-i18n="${isEdit ? 'edit_kv' : 'new_kv'}">${t(isEdit ? 'edit_kv' : 'new_kv')}</span>
+</nav>
+
+<section class="panel animate-fade" style="animation-delay:.05s">
+  <div class="panel-title" data-i18n="${isEdit ? 'edit_kv' : 'new_kv'}">${t(isEdit ? 'edit_kv' : 'new_kv')}</div>
+  <form method="post" action="${isEdit ? `/projects/${project.id}/kvs/${kv.name}/save` : `/projects/${project.id}/kvs`}" class="stack-lg">
+    <div class="kv-form-layout">
+      <div class="kv-form-left">
+        <label class="field">
+          <span class="field-label">KEY</span>
+          <span class="input-wrap"><input class="ui-input" name="name" value="${(kv.name || '').replace(/"/g,'&quot;')}" required ${isEdit ? 'readonly style="opacity:0.6;cursor:not-allowed"' : ''} /></span>
+        </label>
+        <label class="field">
+          <span class="field-label">描述</span>
+          <span class="input-wrap"><input class="ui-input" name="desc" value="${(kv.desc || '').replace(/"/g,'&quot;')}" /></span>
+        </label>
+        <label class="field">
+          <span class="field-label" data-i18n="field_type">${t('field_type')}</span>
+          <span class="select-wrap">
+            <select class="ui-select" name="valueType">
+              ${typeOptions.map(tp => `<option value="${tp}" ${currentType === tp ? 'selected' : ''}>${tp}</option>`).join('')}
+            </select>
+          </span>
+        </label>
+      </div>
+      <div class="kv-form-right">
+        <label class="field">
+          <span class="field-label" data-i18n="value_field">${t('value_field')}</span>
+          <span class="input-wrap">${renderValueInput(currentType, currentValue)}</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="kv-api-path">
+      <span>API: </span>
+      <code>${apiBase}/kv/${kv.name || ''}</code>
+    </div>
+
+    <div class="kv-curl-examples">
+      <div class="curl-title">调用示例 (curl)</div>
+      <div class="curl-item">
+        <span class="curl-method curl-get">GET</span>
+        <code>curl -s ${apiBase}/kv/${kv.name || ':key'}</code>
+      </div>
+      <div class="curl-item">
+        <span class="curl-method curl-put">PUT</span>
+        <code>curl -s -X PUT ${apiBase}/kv/${kv.name || ':key'} -H "Content-Type: application/json" -d '{"value":"newValue"}'</code>
+      </div>
+      <div class="curl-item">
+        <span class="curl-method curl-delete">DEL</span>
+        <code>curl -s -X DELETE ${apiBase}/kv/${kv.name || ':key'}</code>
+      </div>
+      <div class="curl-item">
+        <span class="curl-method curl-post">POST</span>
+        <code>curl -s -X POST ${apiBase}/kv -H "Content-Type: application/json" -d '{"key":"${kv.name || 'newKey'}","desc":"描述","type":"string","value":"值"}'</code>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="ui-button" type="submit" data-i18n="${isEdit ? 'save' : 'create'}">${t(isEdit ? 'save' : 'create')}</button>
+      <a class="ui-button ui-button--ghost" href="/projects/${project.id}" data-i18n="back">${t('back')}</a>
+    </div>
+  </form>
+</section>
+
+<script>
+function renderValueInput(type, value) {
+  if (type === 'boolean') {
+    return '<span class="select-wrap"><select class="ui-select" name="value"><option value="true" ' + (value === true || value === 'true' ? 'selected' : '') + '>TRUE</option><option value="false" ' + (value === false || value === 'false' ? 'selected' : '') + '>FALSE</option></select></span>';
+  }
+  if (type === 'object' || type === 'string') {
+    var displayValue = type === 'object' ? (typeof value === 'object' ? JSON.stringify(value) : String(value || '')) : String(value || '');
+    displayValue = displayValue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    var placeholder = type === 'object' ? '{key:value}' : 'value';
+    return '<div class="textarea-wrap"><textarea class="ui-input" name="value" placeholder="' + placeholder + '">' + displayValue + '</textarea><button type="button" class="btn-expand" onclick="toggleExpand(this)" title="Expand">⛶</button></div>';
+  }
+  return '<span class="input-wrap"><input class="ui-input" type="text" name="value" value="' + String(value || '').replace(/"/g,'&quot;') + '" placeholder="value" /></span>';
+}
+function toggleExpand(btn) {
+  const wrap = btn.closest('.textarea-wrap');
+  wrap.classList.toggle('expanded');
+}
+document.querySelector('select[name="valueType"]').addEventListener('change', function() {
+  const type = this.value;
+  const right = document.querySelector('.kv-form-right .field');
+  const label = right.querySelector('.field-label');
+  let value = '';
+  const existingInput = right.querySelector('[name="value"]');
+  if (existingInput) {
+    if (existingInput.tagName === 'TEXTAREA') {
+      try { value = JSON.parse(existingInput.value); }
+      catch { value = existingInput.value; }
+    } else if (existingInput.tagName === 'SELECT') {
+      value = existingInput.value === 'true';
+    } else {
+      value = existingInput.value;
+    }
+  }
+  right.innerHTML = '<span class="field-label" data-i18n="value_field">' + label.textContent + '</span>' + renderValueInput(type, value);
+});
+document.querySelector('form').addEventListener('submit', function(e) {
+  var keyName = document.querySelector('input[name="name"]').value.trim();
+  if (!keyName) {
+    e.preventDefault();
+    alert('请输入KEY');
+    return;
+  }
+});
+</script>
+
+<style>
+.kv-form-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.kv-form-left {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.kv-form-right {
+  flex: 1;
+  min-width: 0;
+}
+.kv-form-right .field {
+  display: block;
+}
+.kv-api-path {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.kv-api-path code {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+.kv-curl-examples {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.curl-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  letter-spacing: .05em;
+}
+.curl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+.curl-item:last-child {
+  margin-bottom: 0;
+}
+.curl-method {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 2px;
+  min-width: 36px;
+  text-align: center;
+}
+.curl-get { background: #1a7f37; color: #fff; }
+.curl-post { background: #8250df; color: #fff; }
+.curl-put { background: #cf5a00; color: #fff; }
+.curl-delete { background: #cf222e; color: #fff; }
+.kv-curl-examples code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text);
+  word-break: break-all;
+}
+@media (max-width: 640px) {
+  .kv-form-layout {
+    flex-direction: column;
+  }
+  .kv-form-left {
+    flex: none;
+    width: 100%;
+  }
+}
+.textarea-wrap {
+  position: relative;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+}
+.textarea-wrap textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 195px;
+  resize: vertical;
+  padding: 8px 36px 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  box-sizing: border-box;
+}
+.textarea-wrap textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.textarea-wrap .btn-expand {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.textarea-wrap .btn-expand:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.textarea-wrap.expanded {
+  position: fixed;
+  top: 0vh;
+  bottom: 0vh;
+  left: 20px;
+  right: 20px;
+  background: var(--bg);
+  z-index: 200;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.textarea-wrap.expanded textarea {
+  flex: 1;
+  min-height: auto;
+  resize: none;
+}
+.textarea-wrap.expanded .btn-expand {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 18px;
+  padding: 8px 12px;
+}
+</style>
+`;
+%>
+<%- include('layout', { title: t(isEdit ? 'edit_kv' : 'new_kv'), body }) %>

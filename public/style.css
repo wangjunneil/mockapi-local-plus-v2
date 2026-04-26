@@ -118,6 +118,7 @@ code,pre{font-family:var(--font-mono)}
 .card-link{display:block}
 
 .card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}
+.card-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .card-title{font-size:14px;font-weight:700}
 .card-sub{font-size:11px;color:var(--text-muted);margin-top:2px;font-family:var(--font-mono)}
 

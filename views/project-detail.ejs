@@ -82,6 +82,131 @@ ${resources.map((resource, i) => `
 </section>
 ` : `<section class="empty-state animate-fade" style="animation-delay:.2s" data-i18n="no_resources">${t('no_resources')}</section>`}
 
+<section class="section-head animate-fade" style="animation-delay:.25s">
+  <div class="panel-title" style="margin:0">/ <span data-i18n="kvs">${t('kvs')}</span></div>
+  <a class="ui-button" href="/projects/${project.id}/kvs/new">+ <span data-i18n="add_kv">${t('add_kv')}</span></a>
+</section>
+
+<form id="delete-kv-form" method="post" style="display:none"></form>
+
+${kvs.length ? `
+<section class="kv-list animate-fade" style="animation-delay:.25s">
+  <div class="kv-list-head">
+    <span data-i18n="key_field">${t('key_field')}</span>
+    <span>描述</span>
+    <span data-i18n="field_type" style="text-align:center">${t('field_type')}</span>
+    <span data-i18n="value_field">${t('value_field')}</span>
+  </div>
+${kvs.map((kv, i) => {
+  const type = kv.fields?.[0]?.type || 'string';
+  const val = kv.value?.value;
+  let displayVal = '';
+  if (type === 'boolean') displayVal = val ? 'TRUE' : 'FALSE';
+  else if (type === 'object') displayVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+  else if (type === 'array') displayVal = Array.isArray(val) ? JSON.stringify(val) : String(val);
+  else displayVal = String(val);
+  return `
+  <div class="kv-list-item">
+    <span class="kv-name">${kv.name}</span>
+    <span class="kv-desc">${kv.desc || ''}</span>
+    <span class="tag tag--small" style="text-align:center">${type}</span>
+    <code class="kv-list-value">${displayVal.length > 50 ? displayVal.substring(0, 50) + '...' : displayVal}</code>
+    <div class="kv-list-actions">
+      <a class="btn-icon" href="/projects/${project.id}/kvs/${kv.name}/edit" title="编辑">✎</a>
+      <button class="btn-icon btn-danger" type="button" onclick="showDeleteKvModal('${kv.name}')">×</button>
+    </div>
+  </div>
+`;
+}).join('')}
+</section>
+` : `<section class="empty-state animate-fade" style="animation-delay:.3s" data-i18n="no_kvs">${t('no_kvs')}</section>`}
+
+<style>
+.kv-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.kv-list-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px 1fr 60px;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+}
+.kv-list-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px 1fr 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.kv-list-item:last-child { border-bottom: none; }
+.kv-list-item:hover { background: var(--surface-2); }
+.kv-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.kv-desc { font-size: 12px; color: var(--text-muted); }
+.kv-list-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.kv-list-path {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kv-list-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.btn-icon {
+  padding: 4px 8px;
+  font-size: 14px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-icon:hover {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--accent);
+}
+.btn-icon.btn-danger {
+  color: var(--text-dim);
+}
+.btn-icon.btn-danger:hover {
+  color: #fff;
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+.kv-list-item:hover .kv-list-actions { opacity: 1; }
+.kv-list-actions .ui-button { padding: 4px 8px; font-size: 11px; }
+</style>
+
 <script>
 var modalCallback = null;
 
@@ -122,6 +247,22 @@ function showDeleteResourceModal(name, label) {
   confirmBtn.textContent = locale === 'zh' ? '确认删除' : 'Delete';
   var form = document.getElementById('delete-resource-form');
   form.action = '/projects/${project.id}/resources/' + name + '/delete';
+  modalCallback = function() {
+    form.submit();
+  };
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function showDeleteKvModal(name) {
+  var title = document.querySelector('.modal-title');
+  var body = document.querySelector('.modal-body');
+  var confirmBtn = document.getElementById('modal-confirm');
+  var locale = localStorage.getItem('locale') || 'zh';
+  title.textContent = locale === 'zh' ? '确认删除KV' : 'Confirm Delete KV';
+  body.textContent = locale === 'zh' ? '确定删除KV「' + name + '」吗？此操作不可恢复！' : 'Delete KV "' + name + '"? This cannot be undone!';
+  confirmBtn.textContent = locale === 'zh' ? '确认删除' : 'Delete';
+  var form = document.getElementById('delete-kv-form');
+  form.action = '/projects/${project.id}/kvs/' + name + '/delete';
   modalCallback = function() {
     form.submit();
   };
