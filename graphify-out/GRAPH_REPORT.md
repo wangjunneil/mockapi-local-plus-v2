@@ -91,11 +91,11 @@ Nodes (2): getResourceMeta(), inferFieldsFromRecords()
 
 ### Community 9 - "Community 9"
 Cohesion: 1.0
-Nodes (2): castByType(), parseRecordBody()
+Nodes (2): getLocale(), renderWithLocale()
 
 ### Community 10 - "Community 10"
 Cohesion: 1.0
-Nodes (2): getLocale(), renderWithLocale()
+Nodes (2): castByType(), parseRecordBody()
 
 ### Community 11 - "Community 11"
 Cohesion: 1.0
@@ -148,9 +148,9 @@ Nodes (1): Copy Button Component
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 8`** (2 nodes): `getResourceMeta()`, `inferFieldsFromRecords()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 9`** (2 nodes): `castByType()`, `parseRecordBody()`
+- **Thin community `Community 9`** (2 nodes): `getLocale()`, `renderWithLocale()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 10`** (2 nodes): `getLocale()`, `renderWithLocale()`
+- **Thin community `Community 10`** (2 nodes): `castByType()`, `parseRecordBody()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 11`** (2 nodes): `Internationalization System`, `Theme System`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
