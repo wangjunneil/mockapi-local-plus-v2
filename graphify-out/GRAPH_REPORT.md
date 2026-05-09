@@ -1,4 +1,4 @@
-# Graph Report - mockapi-local-plus-v2  (2026-04-27)
+# Graph Report - mockapi-local-plus-v2  (2026-05-09)
 
 ## Corpus Check
 - 10 files · ~9,869 words
@@ -87,7 +87,7 @@ Nodes (3): Data Editing, Data Validation, JSON File Storage
 
 ### Community 8 - "Community 8"
 Cohesion: 1.0
-Nodes (2): getLocale(), renderWithLocale()
+Nodes (2): getResourceMeta(), inferFieldsFromRecords()
 
 ### Community 9 - "Community 9"
 Cohesion: 1.0
@@ -95,7 +95,7 @@ Nodes (2): castByType(), parseRecordBody()
 
 ### Community 10 - "Community 10"
 Cohesion: 1.0
-Nodes (2): getResourceMeta(), inferFieldsFromRecords()
+Nodes (2): getLocale(), renderWithLocale()
 
 ### Community 11 - "Community 11"
 Cohesion: 1.0
@@ -146,11 +146,11 @@ Nodes (1): Copy Button Component
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 6`** (5 nodes): `applyTranslations()`, `setLocale()`, `t()`, `updateLocaleButtons()`, `i18n.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 8`** (2 nodes): `getLocale()`, `renderWithLocale()`
+- **Thin community `Community 8`** (2 nodes): `getResourceMeta()`, `inferFieldsFromRecords()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 9`** (2 nodes): `castByType()`, `parseRecordBody()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 10`** (2 nodes): `getResourceMeta()`, `inferFieldsFromRecords()`
+- **Thin community `Community 10`** (2 nodes): `getLocale()`, `renderWithLocale()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 11`** (2 nodes): `Internationalization System`, `Theme System`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
