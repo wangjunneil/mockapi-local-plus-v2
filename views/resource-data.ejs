@@ -101,16 +101,17 @@ const body = `
       body: JSON.stringify({ jsonText: jsonText })
     })
     .then(function(response) {
-      return response.json().then(function(data) {
-        if (response.ok && data.success) {
-          showSuccessModal();
-        } else {
-          showErrorModal(data.error || 'Unknown error');
+      return response.text().then(function(text) {
+        try {
+          var data = JSON.parse(text);
+          if (response.ok && data.success) {
+            showSuccessModal();
+          } else {
+            showErrorModal(data.error || 'Unknown error');
+          }
+        } catch (e) {
+          showErrorModal(text || 'Unknown error');
         }
-      }).catch(function() {
-        return response.text().then(function(text) {
-          showErrorModal(text);
-        });
       });
     })
     .catch(function(error) {
